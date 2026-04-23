@@ -48,5 +48,17 @@ app.post("/validate", (req, res) => {
   }
 });
 
+app.get("/validate", (req, res) => {
+  try {
+    const token = req.query.token;
+
+    const decoded = jwt.verify(token, SECRET);
+
+    res.send("OK ✅");
+  } catch (e) {
+    res.send("Inválido ❌");
+  }
+});
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log("RUNNING 🚀"));
