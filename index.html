@@ -1,1 +1,25 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>QR Tickets</title>
+</head>
+<body>
 
+<h1>🎟️ Sistema de Tickets</h1>
+
+<button onclick="generarTicket()">Generar Ticket</button>
+
+<div id="output"></div>
+
+<script>
+async function generarTicket() {
+  const res = await fetch("https://TU-RAILWAY.up.railway.app/ticket");
+  const html = await res.text();
+
+  document.getElementById("output").innerHTML = html;
+}
+</script>
+
+</body>
+</html>
