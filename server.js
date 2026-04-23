@@ -1,4 +1,4 @@
-  
+const cors = require("cors"); 
 const express = require("express");
 const jwt = require("jsonwebtoken");
 const QRCode = require("qrcode");
