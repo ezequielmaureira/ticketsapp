@@ -5,6 +5,7 @@ const QRCode = require("qrcode");
 
 const app = express();
 app.use(express.json());
+app.use(cors());
 
 const SECRET = "123456";
 const tickets = {};
