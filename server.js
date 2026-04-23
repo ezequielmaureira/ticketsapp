@@ -14,6 +14,17 @@ app.use(cors({
 const SECRET = "123456";
 const tickets = {};
 
+app.get("/validate", (req, res) => {
+  try {
+    const token = req.query.token;
+    const decoded = jwt.verify(token, SECRET);
+
+    res.send("OK");
+  } catch (e) {
+    res.send("Inválido ❌");
+  }
+});
+
 app.get("/", (req, res) => {
   res.send("API funcionando 🚀");
 });
