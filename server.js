@@ -1,60 +1,50 @@
-const cors = require("cors"); 
+const cors = require("cors");
 const express = require("express");
 const jwt = require("jsonwebtoken");
 const QRCode = require("qrcode");
 
 const app = express();
+
 app.use(express.json());
-app.use(cors({
-  origin: "*",
-  methods: ["GET", "POST"],
-  allowedHeaders: ["Content-Type"]
-}));
+app.use(cors());
 
-const SECRET = "123456";
-const tickets = {};
+const SECRET = "abc123456"; // CAMBIAMOS SECRET (importante)
 
-app.get("/validate", (req, res) => {
-  try {
-    const token = req.query.token;
-    const decoded = jwt.verify(token, SECRET);
-
-    res.send("OK");
-  } catch (e) {
-    res.send("Inválido ❌");
-  }
-});
-
+// raíz
 app.get("/", (req, res) => {
   res.send("API funcionando 🚀");
 });
 
+// generar ticket
 app.get("/ticket", async (req, res) => {
   const id = Math.random().toString(36).substring(7);
 
   const token = jwt.sign({ id }, SECRET);
 
-  tickets[id] = { used: false };
-
   const qr = await QRCode.toDataURL(token);
 
-  res.send(`<h2>QR</h2><img src="${qr}" />`);
+  res.send(`
+    <h2>QR 🎟️</h2>
+    <img src="${qr}" />
+    <p>${token}</p>
+  `);
 });
 
+// validar ticket (UN SOLO ENDPOINT)
 app.post("/validate", (req, res) => {
   try {
     const { token } = req.body;
 
+    console.log("TOKEN RECIBIDO:", token);
+
     const decoded = jwt.verify(token, SECRET);
 
-    if (!tickets[decoded.id]) return res.send("No existe");
-    if (tickets[decoded.id].used) return res.send("Ya usado");
+    console.log("DECODED:", decoded);
 
-    tickets[decoded.id].used = true;
-
-    res.send("OK");
-  } catch {
-    res.send("Inválido");
+    res.send("OK ✅");
+  } catch (e) {
+    console.log("ERROR:", e.message);
+    res.send("Inválido ❌");
   }
 });
 
