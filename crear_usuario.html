@@ -18,6 +18,7 @@
 
   <br><br>
 
+  <!-- 🧩 CREAR -->
   <form id="form">
     <input type="text" id="username" placeholder="Usuario" required>
     <br><br>
@@ -37,11 +38,18 @@
 
   <p id="msg"></p>
 
+  <hr>
+
+  <!-- 📋 LISTA -->
+  <h2>👥 Usuarios</h2>
+  <div id="lista"></div>
+
   <script>
     const API_URL = "https://ticketsapp-production-0823.up.railway.app";
 
     const form = document.getElementById("form");
     const msg = document.getElementById("msg");
+    const lista = document.getElementById("lista");
 
     const token = localStorage.getItem("token");
 
@@ -56,6 +64,7 @@
       window.location.href = "index.html";
     }
 
+    // ➕ CREAR USUARIO
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
 
@@ -78,6 +87,7 @@
         if (res.ok) {
           msg.innerText = "Usuario creado 🚀";
           form.reset();
+          cargarUsuarios(); // 🔥 refresca lista
         } else {
           msg.innerText = "Error ❌ (¿sos admin?)";
         }
@@ -87,6 +97,49 @@
         msg.innerText = "Error conexión";
       }
     });
+
+    // 📥 CARGAR USUARIOS
+    async function cargarUsuarios() {
+      try {
+        const res = await fetch(`${API_URL}/users`, {
+          headers: { "Authorization": token }
+        });
+
+        const data = await res.json();
+
+        lista.innerHTML = "";
+
+        data.forEach(user => {
+          const div = document.createElement("div");
+
+          div.innerHTML = `
+            <b>${user.username}</b> (${user.role})
+            <button onclick="eliminar(${user.id})">Eliminar</button>
+            <hr>
+          `;
+
+          lista.appendChild(div);
+        });
+
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    // ❌ ELIMINAR
+    async function eliminar(id) {
+      if (!confirm("¿Eliminar usuario?")) return;
+
+      await fetch(`${API_URL}/users/${id}`, {
+        method: "DELETE",
+        headers: { "Authorization": token }
+      });
+
+      cargarUsuarios();
+    }
+
+    // 🚀 INIT
+    cargarUsuarios();
   </script>
 
 </body>
