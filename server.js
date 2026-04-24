@@ -156,22 +156,29 @@ app.delete("/users/:id", async (req, res) => {
 
     const { id } = req.params;
 
-    // 🔍 ver qué usuario es
+    console.log("🧨 Intento de borrar user ID:", id);
+
     const result = await pool.query(
-      "SELECT role FROM users WHERE id = $1",
+      "SELECT id, role FROM users WHERE id = $1",
       [id]
     );
 
     const user = result.rows[0];
 
-    if (!user) return res.status(404).send("No existe");
+    if (!user) {
+      console.log("❌ Usuario no existe");
+      return res.status(404).send("No existe");
+    }
 
-    // 🚫 BLOQUEO TOTAL
+    // 🚫 BLOQUEO TOTAL ADMIN
     if (user.role === "admin") {
-      return res.status(400).send("No se puede eliminar un admin");
+      console.log("🚫 Intento de borrar ADMIN bloqueado");
+      return res.status(400).send("NO se puede eliminar un admin");
     }
 
     await pool.query("DELETE FROM users WHERE id = $1", [id]);
+
+    console.log("✅ Usuario eliminado");
 
     res.json({ ok: true });
 
