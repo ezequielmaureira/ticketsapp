@@ -1,21 +1,36 @@
-<div id="contenedor"></div>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tickets App</title>
+</head>
+<body>
+
 <h1 style="color:green">✅ INDEX CARGADO CORRECTAMENTE</h1>
-  <script src="js/renderCard.js"></script>
 
-  <script>
-    const eventos = JSON.parse(localStorage.getItem("events")) || [];
+<a href="create.html">➕ Crear evento</a>
 
-    const contenedor = document.getElementById("contenedor");
+<div id="contenedor"></div>
 
-    async function render() {
-      for (let evento of eventos) {
-        const card = await crearCard(evento);
-        contenedor.appendChild(card);
-      }
+<script src="js/renderCard.js"></script>
+
+<script>
+  const eventos = JSON.parse(localStorage.getItem("events")) || [];
+
+  console.log("EVENTOS:", eventos);
+
+  const contenedor = document.getElementById("contenedor");
+
+  async function render() {
+    for (let evento of eventos) {
+      const card = await crearCard(evento);
+      contenedor.appendChild(card);
     }
+  }
 
-    render();
-  </script>
+  render();
+</script>
 
 </body>
 </html>
