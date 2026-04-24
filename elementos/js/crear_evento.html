@@ -1,1 +1,56 @@
 
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Crear Evento</title>
+</head>
+<body>
+
+<h1>Crear Evento</h1>
+
+<a href="index.html">⬅ Volver</a>
+
+<form id="form">
+  <input type="text" id="name" placeholder="Nombre del evento" required>
+  <br><br>
+
+  <input type="date" id="date" required>
+  <br><br>
+
+  <input type="number" id="price" placeholder="Precio" required>
+  <br><br>
+
+  <button type="submit">Guardar evento</button>
+</form>
+
+<p id="msg"></p>
+
+<script>
+  const form = document.getElementById("form");
+  const msg = document.getElementById("msg");
+
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+
+    const evento = {
+      name: document.getElementById("name").value,
+      date: document.getElementById("date").value,
+      price: document.getElementById("price").value
+    };
+
+    // 📦 guardar en localStorage
+    let eventos = JSON.parse(localStorage.getItem("events")) || [];
+    eventos.push(evento);
+
+    localStorage.setItem("events", JSON.stringify(eventos));
+
+    msg.innerText = "Evento guardado 🚀";
+
+    form.reset();
+  });
+</script>
+
+</body>
+</html>
