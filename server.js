@@ -45,8 +45,13 @@ app.post("/login", async (req, res) => {
       return res.status(401).json({ error: "Credenciales incorrectas" });
     }
 
+    // 🔥 AQUÍ ESTÁ LA MEJORA CLAVE
     const token = jwt.sign(
-      { id: dbUser.id, role: dbUser.role },
+      {
+        id: dbUser.id,
+        role: dbUser.role,
+        username: dbUser.username
+      },
       SECRET,
       { expiresIn: "2h" }
     );
@@ -112,7 +117,6 @@ app.post("/users", onlyAdmin, async (req, res) => {
   try {
     const { username, role } = req.body;
 
-    // 🔐 password automática
     const password = Math.random().toString(36).slice(-8) + "A1!";
 
     await pool.query(
@@ -129,7 +133,7 @@ app.post("/users", onlyAdmin, async (req, res) => {
 });
 
 // =======================
-// 📋 LISTAR USUARIOS (ADMIN)
+// 📋 LISTAR USUARIOS
 // =======================
 app.get("/users", onlyAdmin, async (req, res) => {
   try {
@@ -146,7 +150,7 @@ app.get("/users", onlyAdmin, async (req, res) => {
 });
 
 // =======================
-// ❌ ELIMINAR USUARIO (ADMIN)
+// ❌ ELIMINAR USUARIO
 // =======================
 app.delete("/users/:id", onlyAdmin, async (req, res) => {
   try {
@@ -161,7 +165,6 @@ app.delete("/users/:id", onlyAdmin, async (req, res) => {
 
     if (!user) return res.status(404).send("No existe");
 
-    // 🚫 bloquear eliminar admin
     if (user.role === "admin") {
       return res.status(400).send("No se puede eliminar admin");
     }
@@ -177,39 +180,22 @@ app.delete("/users/:id", onlyAdmin, async (req, res) => {
 });
 
 // =======================
-// 🎟️ GENERAR TICKET
+// 🎟️ TICKET
 // =======================
 app.get("/ticket", async (req, res) => {
   const id = Math.random().toString(36).substring(7);
-
   const token = jwt.sign({ id }, SECRET);
-
   const qr = await QRCode.toDataURL(token);
 
-  res.send(`
-    <h2>QR 🎟️</h2>
-    <img src="${qr}" />
-    <p>${token}</p>
-  `);
+  res.send(`<h2>QR 🎟️</h2><img src="${qr}" /><p>${token}</p>`);
 });
 
 // =======================
-// 🔐 VALIDAR TICKET
+// 🔐 VALIDAR
 // =======================
 app.post("/validate", (req, res) => {
   try {
-    const { token } = req.body;
-    jwt.verify(token, SECRET);
-    res.send("OK ✅");
-  } catch {
-    res.send("Inválido ❌");
-  }
-});
-
-app.get("/validate", (req, res) => {
-  try {
-    const token = req.query.token;
-    jwt.verify(token, SECRET);
+    jwt.verify(req.body.token, SECRET);
     res.send("OK ✅");
   } catch {
     res.send("Inválido ❌");
@@ -231,23 +217,13 @@ app.post("/events", auth, async (req, res) => {
     res.json({ ok: true });
 
   } catch (err) {
-    console.error("ERROR POST /events:", err);
     res.status(500).json({ ok: false });
   }
 });
 
 app.get("/events", async (req, res) => {
-  try {
-    const result = await pool.query(
-      "SELECT * FROM events ORDER BY id DESC"
-    );
-
-    res.json(result.rows);
-
-  } catch (err) {
-    console.error("ERROR GET /events:", err);
-    res.status(500).json([]);
-  }
+  const result = await pool.query("SELECT * FROM events ORDER BY id DESC");
+  res.json(result.rows);
 });
 
 // =======================
