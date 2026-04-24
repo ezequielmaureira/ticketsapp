@@ -19,19 +19,19 @@
     <p id="loginMsg"></p>
   </div>
 
-  <br>
+  <!-- 👋 BIENVENIDA -->
+  <h3 id="welcome"></h3>
 
-  <!-- 🧑‍💼 PANEL (APARECE SI ESTÁ LOGUEADO) -->
+  <!-- 🧑‍💼 PANEL -->
   <div id="panelAdmin" style="display:none;">
     <a href="crear_evento.html">➕ Crear evento</a>
-    <a href="crear_usuario.html">👤 Crear usuario</a>
+    <a href="crear_usuario.html" id="btnUsuarios">👤 Crear usuario</a>
     <br><br>
     <button onclick="logout()">Cerrar sesión</button>
   </div>
 
   <br>
 
-  <!-- 📦 EVENTOS -->
   <div id="contenedor"></div>
 
   <script src="js/render.js?v=3"></script>
@@ -40,6 +40,15 @@
     const API_URL = "https://ticketsapp-production-0823.up.railway.app";
 
     const contenedor = document.getElementById("contenedor");
+
+    // 🧠 DECODIFICAR TOKEN (SIN LIBRERÍA)
+    function parseJwt(token) {
+      try {
+        return JSON.parse(atob(token.split('.')[1]));
+      } catch {
+        return null;
+      }
+    }
 
     // 🔐 LOGIN
     async function login() {
@@ -57,7 +66,6 @@
 
         if (data.token) {
           localStorage.setItem("token", data.token);
-          document.getElementById("loginMsg").innerText = "Logueado ✅";
           checkLogin();
         } else {
           document.getElementById("loginMsg").innerText = "Error login ❌";
@@ -65,7 +73,6 @@
 
       } catch (err) {
         console.error(err);
-        document.getElementById("loginMsg").innerText = "Error conexión";
       }
     }
 
@@ -75,23 +82,35 @@
       location.reload();
     }
 
-    // 🔍 VERIFICAR LOGIN
+    // 🔍 CHECK LOGIN + ROLE
     function checkLogin() {
       const token = localStorage.getItem("token");
 
-      if (token) {
-        document.getElementById("panelAdmin").style.display = "block";
-        document.getElementById("loginBox").style.display = "none";
+      if (!token) return;
+
+      const user = parseJwt(token);
+
+      if (!user) return;
+
+      // 👋 mostrar usuario
+      document.getElementById("welcome").innerText =
+        `Bienvenido 👋 (ID: ${user.id} - ${user.role})`;
+
+      document.getElementById("loginBox").style.display = "none";
+      document.getElementById("panelAdmin").style.display = "block";
+
+      // 🚫 solo admin ve usuarios
+      if (user.role !== "admin") {
+        document.getElementById("btnUsuarios").style.display = "none";
       }
     }
 
-    // 📥 CARGAR EVENTOS
+    // 📦 EVENTOS
     async function cargarEventos() {
       try {
         const res = await fetch(`${API_URL}/events`);
         return await res.json();
-      } catch (err) {
-        console.error("Error cargando eventos:", err);
+      } catch {
         return [];
       }
     }
