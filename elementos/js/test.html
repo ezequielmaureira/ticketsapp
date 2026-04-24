@@ -1,27 +1,25 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Test Card</title>
+  <title>Test Eventos</title>
 </head>
 <body>
 
-<h1>Test de render de evento</h1>
+<h1>TEST DE EVENTOS</h1>
 
 <div id="contenedor"></div>
 
-<script src="js/renderCard.js"></script>
+<script src="../js/renderCard.js"></script>
 
 <script>
-  // 🔥 evento de prueba (mock)
+  const contenedor = document.getElementById("contenedor");
+
   const evento = {
-    name: "Concierto Test",
+    name: "Concierto Rock",
     date: "2026-05-01",
     price: 5000
   };
-
-  const contenedor = document.getElementById("contenedor");
 
   async function init() {
     const card = await crearCard(evento);
@@ -32,4 +30,5 @@
 </script>
 
 </body>
+</html>
 </html>
