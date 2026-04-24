@@ -2,7 +2,7 @@ const cors = require("cors");
 const express = require("express");
 const jwt = require("jsonwebtoken");
 const QRCode = require("qrcode");
-
+const { Pool } = require("pg");
 const app = express();
 
 app.use(express.json());
