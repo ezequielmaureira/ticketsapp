@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -31,24 +30,30 @@
   const form = document.getElementById("form");
   const msg = document.getElementById("msg");
 
-  form.addEventListener("submit", (e) => {
+  form.addEventListener("submit", async (e) => {
     e.preventDefault();
 
     const evento = {
       name: document.getElementById("name").value,
       date: document.getElementById("date").value,
-      price: document.getElementById("price").value
+      price: Number(document.getElementById("price").value)
     };
 
-    // 📦 guardar en localStorage
-    let eventos = JSON.parse(localStorage.getItem("events")) || [];
-    eventos.push(evento);
+    // 🔌 CAMBIAR ESTA URL por tu Railway
+    const res = await fetch("https://TU-BACKEND.up.railway.app/events", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(evento)
+    });
 
-    localStorage.setItem("events", JSON.stringify(eventos));
-
-    msg.innerText = "Evento guardado 🚀";
-
-    form.reset();
+    if (res.ok) {
+      msg.innerText = "Evento enviado 🚀";
+      form.reset();
+    } else {
+      msg.innerText = "Error al enviar";
+    }
   });
 </script>
 
