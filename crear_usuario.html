@@ -1,1 +1,93 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Crear Usuario</title>
+</head>
 
+<body>
+
+  <h1>👤 Crear Usuario</h1>
+
+  <a href="index.html">⬅ Volver</a>
+
+  <br><br>
+
+  <button onclick="logout()">Cerrar sesión</button>
+
+  <br><br>
+
+  <form id="form">
+    <input type="text" id="username" placeholder="Usuario" required>
+    <br><br>
+
+    <input type="password" id="password" placeholder="Contraseña" required>
+    <br><br>
+
+    <select id="role">
+      <option value="seller">Vendedor</option>
+      <option value="admin">Admin</option>
+    </select>
+
+    <br><br>
+
+    <button type="submit">Crear</button>
+  </form>
+
+  <p id="msg"></p>
+
+  <script>
+    const API_URL = "https://ticketsapp-production-0823.up.railway.app";
+
+    const form = document.getElementById("form");
+    const msg = document.getElementById("msg");
+
+    const token = localStorage.getItem("token");
+
+    // 🔐 bloquear si no está logueado
+    if (!token) {
+      alert("No autorizado");
+      window.location.href = "index.html";
+    }
+
+    function logout() {
+      localStorage.removeItem("token");
+      window.location.href = "index.html";
+    }
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const user = {
+        username: document.getElementById("username").value,
+        password: document.getElementById("password").value,
+        role: document.getElementById("role").value
+      };
+
+      try {
+        const res = await fetch(`${API_URL}/users`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": token
+          },
+          body: JSON.stringify(user)
+        });
+
+        if (res.ok) {
+          msg.innerText = "Usuario creado 🚀";
+          form.reset();
+        } else {
+          msg.innerText = "Error ❌ (¿sos admin?)";
+        }
+
+      } catch (err) {
+        console.error(err);
+        msg.innerText = "Error conexión";
+      }
+    });
+  </script>
+
+</body>
+</html>
