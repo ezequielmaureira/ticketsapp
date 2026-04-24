@@ -3,19 +3,33 @@ const express = require("express");
 const jwt = require("jsonwebtoken");
 const QRCode = require("qrcode");
 const { Pool } = require("pg");
+
 const app = express();
 
 app.use(express.json());
 app.use(cors());
 
-const SECRET = "abc123456"; // CAMBIAMOS SECRET (importante)
+// 🔐 SECRET (después lo podés mover a env)
+const SECRET = "abc123456";
 
-// raíz
+// 🟢 CONEXIÓN POSTGRES (RAILWAY)
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false
+  }
+});
+
+// =======================
+// 🧠 RUTA BASE
+// =======================
 app.get("/", (req, res) => {
   res.send("API funcionando 🚀");
 });
 
-// generar ticket
+// =======================
+// 🎟️ GENERAR TICKET
+// =======================
 app.get("/ticket", async (req, res) => {
   const id = Math.random().toString(36).substring(7);
 
@@ -30,20 +44,17 @@ app.get("/ticket", async (req, res) => {
   `);
 });
 
-// validar ticket (UN SOLO ENDPOINT)
+// =======================
+// 🔐 VALIDAR TICKET
+// =======================
 app.post("/validate", (req, res) => {
   try {
     const { token } = req.body;
 
-    console.log("TOKEN RECIBIDO:", token);
-
     const decoded = jwt.verify(token, SECRET);
-
-    console.log("DECODED:", decoded);
 
     res.send("OK ✅");
   } catch (e) {
-    console.log("ERROR:", e.message);
     res.send("Inválido ❌");
   }
 });
@@ -60,20 +71,48 @@ app.get("/validate", (req, res) => {
   }
 });
 
-let eventos = [];
+// =======================
+// 🎫 EVENTS (POSTGRES)
+// =======================
 
-app.post("/events", (req, res) => {
-  const evento = req.body;
-  eventos.push(evento);
+// ➕ CREAR EVENTO
+app.post("/events", async (req, res) => {
+  try {
+    const { name, date, price } = req.body;
 
-  console.log("EVENTO GUARDADO:", evento);
+    await pool.query(
+      "INSERT INTO events (name, date, price) VALUES ($1, $2, $3)",
+      [name, date, price]
+    );
 
-  res.json({ ok: true });
+    res.json({ ok: true });
+
+  } catch (err) {
+    console.error("ERROR POST /events:", err);
+    res.status(500).json({ ok: false });
+  }
 });
 
-app.get("/events", (req, res) => {
-  res.json(eventos);
+// 📥 OBTENER EVENTOS
+app.get("/events", async (req, res) => {
+  try {
+    const result = await pool.query(
+      "SELECT * FROM events ORDER BY id DESC"
+    );
+
+    res.json(result.rows);
+
+  } catch (err) {
+    console.error("ERROR GET /events:", err);
+    res.status(500).json([]);
+  }
 });
 
+// =======================
+// 🚀 SERVER
+// =======================
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log("RUNNING 🚀"));
+
+app.listen(PORT, () => {
+  console.log("RUNNING 🚀 on port " + PORT);
+});
