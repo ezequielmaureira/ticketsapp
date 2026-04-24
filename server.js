@@ -60,5 +60,20 @@ app.get("/validate", (req, res) => {
   }
 });
 
+let eventos = [];
+
+app.post("/events", (req, res) => {
+  const evento = req.body;
+  eventos.push(evento);
+
+  console.log("EVENTO GUARDADO:", evento);
+
+  res.json({ ok: true });
+});
+
+app.get("/events", (req, res) => {
+  res.json(eventos);
+});
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log("RUNNING 🚀"));
