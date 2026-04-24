@@ -1,13 +1,16 @@
 async function crearCard(evento) {
   const res = await fetch("elementos/card_evento.html");
+
   const html = await res.text();
 
   const wrapper = document.createElement("div");
   wrapper.innerHTML = html;
 
-  wrapper.querySelector(".title").textContent = evento.name;
-  wrapper.querySelector(".date").textContent = "📅 " + evento.date;
-  wrapper.querySelector(".price").textContent = "💰 $" + evento.price;
+  const card = wrapper.firstElementChild;
 
-  return wrapper.firstElementChild;
+  card.querySelector(".title").textContent = evento.name;
+  card.querySelector(".date").textContent = "📅 " + evento.date;
+  card.querySelector(".price").textContent = "💰 $" + evento.price;
+
+  return card;
 }
