@@ -9,8 +9,12 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-// 🔐 SECRET (después lo podés mover a env)
+// 🔐 SECRET
 const SECRET = "abc123456";
+
+// 🔐 LOGIN ADMIN (simple)
+const ADMIN_USER = "admin";
+const ADMIN_PASS = "1234";
 
 // 🟢 CONEXIÓN POSTGRES (RAILWAY)
 const pool = new Pool({
@@ -26,6 +30,36 @@ const pool = new Pool({
 app.get("/", (req, res) => {
   res.send("API funcionando 🚀");
 });
+
+// =======================
+// 🔐 LOGIN
+// =======================
+app.post("/login", (req, res) => {
+  const { user, pass } = req.body;
+
+  if (user === ADMIN_USER && pass === ADMIN_PASS) {
+    const token = jwt.sign({ role: "admin" }, SECRET, { expiresIn: "2h" });
+    return res.json({ token });
+  }
+
+  res.status(401).json({ error: "Credenciales incorrectas" });
+});
+
+// =======================
+// 🔒 MIDDLEWARE AUTH
+// =======================
+function auth(req, res, next) {
+  const token = req.headers.authorization;
+
+  if (!token) return res.status(401).send("No autorizado");
+
+  try {
+    jwt.verify(token, SECRET);
+    next();
+  } catch (err) {
+    return res.status(401).send("Token inválido");
+  }
+}
 
 // =======================
 // 🎟️ GENERAR TICKET
@@ -50,9 +84,7 @@ app.get("/ticket", async (req, res) => {
 app.post("/validate", (req, res) => {
   try {
     const { token } = req.body;
-
-    const decoded = jwt.verify(token, SECRET);
-
+    jwt.verify(token, SECRET);
     res.send("OK ✅");
   } catch (e) {
     res.send("Inválido ❌");
@@ -62,9 +94,7 @@ app.post("/validate", (req, res) => {
 app.get("/validate", (req, res) => {
   try {
     const token = req.query.token;
-
-    const decoded = jwt.verify(token, SECRET);
-
+    jwt.verify(token, SECRET);
     res.send("OK ✅");
   } catch (e) {
     res.send("Inválido ❌");
@@ -75,8 +105,8 @@ app.get("/validate", (req, res) => {
 // 🎫 EVENTS (POSTGRES)
 // =======================
 
-// ➕ CREAR EVENTO
-app.post("/events", async (req, res) => {
+// ➕ CREAR EVENTO (AHORA PROTEGIDO)
+app.post("/events", auth, async (req, res) => {
   try {
     const { name, date, price } = req.body;
 
@@ -93,7 +123,7 @@ app.post("/events", async (req, res) => {
   }
 });
 
-// 📥 OBTENER EVENTOS
+// 📥 OBTENER EVENTOS (PÚBLICO)
 app.get("/events", async (req, res) => {
   try {
     const result = await pool.query(
