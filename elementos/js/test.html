@@ -2,6 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Test Eventos</title>
 </head>
 <body>
@@ -10,25 +11,47 @@
 
 <div id="contenedor"></div>
 
-<script src="../js/renderCard.js"></script>
-
 <script>
-  const contenedor = document.getElementById("contenedor");
-
-  const evento = {
-    name: "Concierto Rock",
-    date: "2026-05-01",
-    price: 5000
-  };
-
-  async function init() {
-    const card = await crearCard(evento);
-    contenedor.appendChild(card);
+  // 🧱 MODELO (objeto evento)
+  function crearEvento(name, date, price) {
+    return {
+      name,
+      date,
+      price
+    };
   }
 
-  init();
+  // 🎯 EVENTOS DE PRUEBA
+  const eventos = [
+    crearEvento("Concierto Rock", "2026-05-01", 5000),
+    crearEvento("Expo Tech", "2026-06-10", 3000),
+    crearEvento("Festival Food", "2026-07-20", 2000)
+  ];
+
+  // 🎨 RENDER SIMPLE (sin fetch, sin complicaciones)
+  const contenedor = document.getElementById("contenedor");
+
+  function render() {
+    eventos.forEach(evento => {
+      const card = document.createElement("div");
+
+      card.style.border = "1px solid #ccc";
+      card.style.margin = "10px";
+      card.style.padding = "10px";
+
+      card.innerHTML = `
+        <h3>${evento.name}</h3>
+        <p>📅 ${evento.date}</p>
+        <p>💰 $${evento.price}</p>
+      `;
+
+      contenedor.appendChild(card);
+    });
+  }
+
+  render();
+
 </script>
 
 </body>
-</html>
 </html>
