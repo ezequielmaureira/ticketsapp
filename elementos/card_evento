@@ -1,1 +1,5 @@
-
+<div class="evento-card">
+  <h3 id="titulo"></h3>
+  <p id="fecha"></p>
+  <p id="precio"></p>
+</div>
