@@ -93,8 +93,8 @@
       if (!user) return;
 
       // 👋 mostrar usuario
-      document.getElementById("welcome").innerText =
-        `Bienvenido 👋 (ID: ${user.id} - ${user.role})`;
+     document.getElementById("welcome").innerText =
+  `Bienvenido 👋 ${user.username} (${user.role})`;
 
       document.getElementById("loginBox").style.display = "none";
       document.getElementById("panelAdmin").style.display = "block";
