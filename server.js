@@ -12,7 +12,7 @@ app.use(cors());
 // 🔐 SECRET
 const SECRET = "abc123456";
 
-// 🟢 CONEXIÓN POSTGRES (RAILWAY)
+// 🟢 CONEXIÓN POSTGRES
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: {
@@ -28,7 +28,7 @@ app.get("/", (req, res) => {
 });
 
 // =======================
-// 🔐 LOGIN (DESDE BD)
+// 🔐 LOGIN
 // =======================
 app.post("/login", async (req, res) => {
   const { user, pass } = req.body;
@@ -60,7 +60,7 @@ app.post("/login", async (req, res) => {
 });
 
 // =======================
-// 🔒 MIDDLEWARE AUTH
+// 🔒 AUTH GENERAL
 // =======================
 function auth(req, res, next) {
   const token = req.headers.authorization;
@@ -77,34 +77,50 @@ function auth(req, res, next) {
     req.user = decoded;
     next();
 
-  } catch (err) {
+  } catch {
     return res.status(401).send("Token inválido");
   }
 }
 
 // =======================
-// 👤 CREAR USUARIO (SOLO ADMIN)
+// 🔒 SOLO ADMIN
 // =======================
-app.post("/users", async (req, res) => {
+function onlyAdmin(req, res, next) {
+  const token = req.headers.authorization;
+
+  if (!token) return res.status(401).send("No autorizado");
+
   try {
-    const token = req.headers.authorization;
-
-    if (!token) return res.status(401).send("No autorizado");
-
     const decoded = jwt.verify(token, SECRET);
 
     if (decoded.role !== "admin") {
-      return res.status(403).send("Sin permisos");
+      return res.status(403).send("Solo admin");
     }
 
-    const { username, password, role } = req.body;
+    req.user = decoded;
+    next();
+
+  } catch {
+    return res.status(401).send("Token inválido");
+  }
+}
+
+// =======================
+// 👤 CREAR USUARIO (ADMIN)
+// =======================
+app.post("/users", onlyAdmin, async (req, res) => {
+  try {
+    const { username, role } = req.body;
+
+    // 🔐 password automática
+    const password = Math.random().toString(36).slice(-8) + "A1!";
 
     await pool.query(
       "INSERT INTO users (username, password, role) VALUES ($1, $2, $3)",
       [username, password, role]
     );
 
-    res.json({ ok: true });
+    res.json({ ok: true, password });
 
   } catch (err) {
     console.error("ERROR POST /users:", err);
@@ -113,20 +129,10 @@ app.post("/users", async (req, res) => {
 });
 
 // =======================
-// 📋 LISTAR USUARIOS (SOLO ADMIN)
+// 📋 LISTAR USUARIOS (ADMIN)
 // =======================
-app.get("/users", async (req, res) => {
+app.get("/users", onlyAdmin, async (req, res) => {
   try {
-    const token = req.headers.authorization;
-
-    if (!token) return res.status(401).send("No autorizado");
-
-    const decoded = jwt.verify(token, SECRET);
-
-    if (decoded.role !== "admin") {
-      return res.status(403).send("Sin permisos");
-    }
-
     const result = await pool.query(
       "SELECT id, username, role FROM users ORDER BY id DESC"
     );
@@ -140,45 +146,27 @@ app.get("/users", async (req, res) => {
 });
 
 // =======================
-// ❌ ELIMINAR USUARIO (PROTEGIDO)
+// ❌ ELIMINAR USUARIO (ADMIN)
 // =======================
-app.delete("/users/:id", async (req, res) => {
+app.delete("/users/:id", onlyAdmin, async (req, res) => {
   try {
-    const token = req.headers.authorization;
-
-    if (!token) return res.status(401).send("No autorizado");
-
-    const decoded = jwt.verify(token, SECRET);
-
-    if (decoded.role !== "admin") {
-      return res.status(403).send("Sin permisos");
-    }
-
     const { id } = req.params;
 
-    console.log("🧨 Intento de borrar user ID:", id);
-
     const result = await pool.query(
-      "SELECT id, role FROM users WHERE id = $1",
+      "SELECT role FROM users WHERE id = $1",
       [id]
     );
 
     const user = result.rows[0];
 
-    if (!user) {
-      console.log("❌ Usuario no existe");
-      return res.status(404).send("No existe");
-    }
+    if (!user) return res.status(404).send("No existe");
 
-    // 🚫 BLOQUEO TOTAL ADMIN
+    // 🚫 bloquear eliminar admin
     if (user.role === "admin") {
-      console.log("🚫 Intento de borrar ADMIN bloqueado");
-      return res.status(400).send("NO se puede eliminar un admin");
+      return res.status(400).send("No se puede eliminar admin");
     }
 
     await pool.query("DELETE FROM users WHERE id = $1", [id]);
-
-    console.log("✅ Usuario eliminado");
 
     res.json({ ok: true });
 
@@ -213,7 +201,7 @@ app.post("/validate", (req, res) => {
     const { token } = req.body;
     jwt.verify(token, SECRET);
     res.send("OK ✅");
-  } catch (e) {
+  } catch {
     res.send("Inválido ❌");
   }
 });
@@ -223,7 +211,7 @@ app.get("/validate", (req, res) => {
     const token = req.query.token;
     jwt.verify(token, SECRET);
     res.send("OK ✅");
-  } catch (e) {
+  } catch {
     res.send("Inválido ❌");
   }
 });
