@@ -10,9 +10,9 @@
 
   <h1>🎟️ Eventos</h1>
 
-  <!-- 🔐 LOGIN SIMPLE -->
+  <!-- 🔐 LOGIN -->
   <div id="loginBox">
-    <h3>Login Admin</h3>
+    <h3>Login</h3>
     <input type="text" id="user" placeholder="Usuario">
     <input type="password" id="pass" placeholder="Contraseña">
     <button onclick="login()">Ingresar</button>
@@ -21,18 +21,26 @@
 
   <br>
 
-  <!-- SOLO SI ESTÁ LOGUEADO -->
-  <a href="crear_evento.html" id="crearLink" style="display:none;">➕ Crear evento</a>
+  <!-- 🧑‍💼 PANEL (APARECE SI ESTÁ LOGUEADO) -->
+  <div id="panelAdmin" style="display:none;">
+    <a href="crear_evento.html">➕ Crear evento</a>
+    <br><br>
+    <a href="crear_usuario.html">👤 Crear usuario</a>
+    <br><br>
+    <button onclick="logout()">Cerrar sesión</button>
+  </div>
 
+  <br>
+
+  <!-- 📦 EVENTOS -->
   <div id="contenedor"></div>
 
-  <script src="js/render.js?v=2"></script>
+  <script src="js/render.js?v=3"></script>
 
   <script>
     const API_URL = "https://ticketsapp-production-0823.up.railway.app";
 
     const contenedor = document.getElementById("contenedor");
-    const crearLink = document.getElementById("crearLink");
 
     // 🔐 LOGIN
     async function login() {
@@ -58,15 +66,22 @@
 
       } catch (err) {
         console.error(err);
+        document.getElementById("loginMsg").innerText = "Error conexión";
       }
     }
 
-    // 🔍 VERIFICAR SI YA ESTÁ LOGUEADO
+    // 🔓 LOGOUT
+    function logout() {
+      localStorage.removeItem("token");
+      location.reload();
+    }
+
+    // 🔍 VERIFICAR LOGIN
     function checkLogin() {
       const token = localStorage.getItem("token");
 
       if (token) {
-        crearLink.style.display = "block";
+        document.getElementById("panelAdmin").style.display = "block";
         document.getElementById("loginBox").style.display = "none";
       }
     }
