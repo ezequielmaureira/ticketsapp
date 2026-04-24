@@ -84,6 +84,39 @@ function auth(req, res, next) {
 }
 
 // =======================
+// 👤 CREAR USUARIO (SOLO ADMIN)
+// =======================
+app.post("/users", async (req, res) => {
+  try {
+    const token = req.headers.authorization;
+
+    if (!token) return res.status(401).send("No autorizado");
+
+    const decoded = jwt.verify(token, SECRET);
+
+    // solo admin puede crear usuarios
+    if (decoded.role !== "admin") {
+      return res.status(403).send("Sin permisos");
+    }
+
+    const { username, password, role } = req.body;
+
+    await pool.query(
+      "INSERT INTO users (username, password, role) VALUES ($1, $2, $3)",
+      [username, password, role]
+    );
+
+    res.json({ ok: true });
+
+  } catch (err) {
+    console.error("ERROR POST /users:", err);
+    res.status(500).json({ ok: false });
+  }
+});
+
+
+
+// =======================
 // 🎟️ GENERAR TICKET
 // =======================
 app.get("/ticket", async (req, res) => {
