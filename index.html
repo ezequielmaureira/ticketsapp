@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tickets App</title>
+  <title>Eventos</title>
 </head>
 <body>
 
-<h1 style="color:green">✅ INDEX CARGADO CORRECTAMENTE</h1>
+<h1>Eventos</h1>
 
 <a href="create.html">➕ Crear evento</a>
 
@@ -16,13 +16,18 @@
 <script src="js/renderCard.js"></script>
 
 <script>
-  const eventos = JSON.parse(localStorage.getItem("events")) || [];
-
-  console.log("EVENTOS:", eventos);
-
   const contenedor = document.getElementById("contenedor");
 
+  async function cargarEventos() {
+    const res = await fetch("https://TU-BACKEND.up.railway.app/events");
+    return await res.json();
+  }
+
   async function render() {
+    const eventos = await cargarEventos();
+
+    contenedor.innerHTML = "";
+
     for (let evento of eventos) {
       const card = await crearCard(evento);
       contenedor.appendChild(card);
