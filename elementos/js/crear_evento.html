@@ -30,6 +30,8 @@
   const form = document.getElementById("form");
   const msg = document.getElementById("msg");
 
+  const API_URL = "https://TU-RAILWAY.up.railway.app";
+
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
 
@@ -39,20 +41,32 @@
       price: Number(document.getElementById("price").value)
     };
 
-    // 🔌 CAMBIAR ESTA URL por tu Railway
-    const res = await fetch("https://TU-BACKEND.up.railway.app/events", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(evento)
-    });
+    console.log("📦 Enviando evento:", evento);
 
-    if (res.ok) {
-      msg.innerText = "Evento enviado 🚀";
-      form.reset();
-    } else {
-      msg.innerText = "Error al enviar";
+    try {
+      const res = await fetch(`${API_URL}/events`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(evento)
+      });
+
+      console.log("STATUS:", res.status);
+
+      const data = await res.text();
+      console.log("RESPUESTA:", data);
+
+      if (res.ok) {
+        msg.innerText = "Evento enviado 🚀";
+        form.reset();
+      } else {
+        msg.innerText = "Error en backend";
+      }
+
+    } catch (error) {
+      console.error("❌ ERROR FETCH:", error);
+      msg.innerText = "Error de conexión con backend";
     }
   });
 </script>
