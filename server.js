@@ -60,7 +60,7 @@ app.post("/login", async (req, res) => {
 });
 
 // =======================
-// 🔒 MIDDLEWARE AUTH + ROLES
+// 🔒 MIDDLEWARE AUTH
 // =======================
 function auth(req, res, next) {
   const token = req.headers.authorization;
@@ -70,7 +70,6 @@ function auth(req, res, next) {
   try {
     const decoded = jwt.verify(token, SECRET);
 
-    // solo admin o seller pueden crear eventos
     if (decoded.role !== "admin" && decoded.role !== "seller") {
       return res.status(403).send("Sin permisos");
     }
@@ -94,7 +93,6 @@ app.post("/users", async (req, res) => {
 
     const decoded = jwt.verify(token, SECRET);
 
-    // solo admin puede crear usuarios
     if (decoded.role !== "admin") {
       return res.status(403).send("Sin permisos");
     }
@@ -142,7 +140,7 @@ app.get("/users", async (req, res) => {
 });
 
 // =======================
-// ❌ ELIMINAR USUARIO (SOLO ADMIN)
+// ❌ ELIMINAR USUARIO (PROTEGIDO)
 // =======================
 app.delete("/users/:id", async (req, res) => {
   try {
@@ -158,6 +156,21 @@ app.delete("/users/:id", async (req, res) => {
 
     const { id } = req.params;
 
+    // 🔍 ver qué usuario es
+    const result = await pool.query(
+      "SELECT role FROM users WHERE id = $1",
+      [id]
+    );
+
+    const user = result.rows[0];
+
+    if (!user) return res.status(404).send("No existe");
+
+    // 🚫 BLOQUEO TOTAL
+    if (user.role === "admin") {
+      return res.status(400).send("No se puede eliminar un admin");
+    }
+
     await pool.query("DELETE FROM users WHERE id = $1", [id]);
 
     res.json({ ok: true });
@@ -167,8 +180,6 @@ app.delete("/users/:id", async (req, res) => {
     res.status(500).json({ ok: false });
   }
 });
-
-
 
 // =======================
 // 🎟️ GENERAR TICKET
@@ -211,10 +222,8 @@ app.get("/validate", (req, res) => {
 });
 
 // =======================
-// 🎫 EVENTS (POSTGRES)
+// 🎫 EVENTS
 // =======================
-
-// ➕ CREAR EVENTO (PROTEGIDO)
 app.post("/events", auth, async (req, res) => {
   try {
     const { name, date, price } = req.body;
@@ -232,7 +241,6 @@ app.post("/events", auth, async (req, res) => {
   }
 });
 
-// 📥 OBTENER EVENTOS (PÚBLICO)
 app.get("/events", async (req, res) => {
   try {
     const result = await pool.query(
