@@ -5,49 +5,51 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Eventos</title>
 </head>
+
 <body>
 
-<h1>Eventos</h1>
+  <h1>🎟️ Eventos</h1>
 
-<a href="crear_evento.html">➕ Crear evento</a>
+  <a href="crear_evento.html">➕ Crear evento</a>
 
-<div id="contenedor"></div>
+  <div id="contenedor"></div>
 
-<script src="js/renderCard.js"></script>
+  <!-- 🔥 Script que crea las cards -->
+  <script src="js/render.js"></script>
 
-<script>
-  const API_URL = "https://ticketsapp-production-0823.up.railway.app";
+  <script>
+    const API_URL = "https://ticketsapp-production-0823.up.railway.app";
 
-  const contenedor = document.getElementById("contenedor");
+    const contenedor = document.getElementById("contenedor");
 
-  async function cargarEventos() {
-    try {
-      const res = await fetch(`${API_URL}/events`);
-      return await res.json();
-    } catch (err) {
-      console.error("Error cargando eventos:", err);
-      return [];
-    }
-  }
-
-  async function render() {
-    const eventos = await cargarEventos();
-
-    contenedor.innerHTML = "";
-
-    if (eventos.length === 0) {
-      contenedor.innerHTML = "<p>No hay eventos todavía</p>";
-      return;
+    async function cargarEventos() {
+      try {
+        const res = await fetch(`${API_URL}/events`);
+        return await res.json();
+      } catch (err) {
+        console.error("Error cargando eventos:", err);
+        return [];
+      }
     }
 
-    for (let evento of eventos) {
-      const card = await crearCard(evento);
-      contenedor.appendChild(card);
-    }
-  }
+    async function render() {
+      const eventos = await cargarEventos();
 
-  render();
-</script>
+      contenedor.innerHTML = "";
+
+      if (eventos.length === 0) {
+        contenedor.innerHTML = "<p>No hay eventos todavía</p>";
+        return;
+      }
+
+      for (let evento of eventos) {
+        const card = await crearCard(evento);
+        contenedor.appendChild(card);
+      }
+    }
+
+    render();
+  </script>
 
 </body>
 </html>
