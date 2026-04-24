@@ -9,24 +9,36 @@
 
 <h1>Eventos</h1>
 
-<a href="create.html">➕ Crear evento</a>
+<a href="create_evento.html">➕ Crear evento</a>
 
 <div id="contenedor"></div>
 
 <script src="js/renderCard.js"></script>
 
 <script>
+  const API_URL = "https://ticketsapp-production-0823.up.railway.app";
+
   const contenedor = document.getElementById("contenedor");
 
   async function cargarEventos() {
-    const res = await fetch("https://TU-BACKEND.up.railway.app/events");
-    return await res.json();
+    try {
+      const res = await fetch(`${API_URL}/events`);
+      return await res.json();
+    } catch (err) {
+      console.error("Error cargando eventos:", err);
+      return [];
+    }
   }
 
   async function render() {
     const eventos = await cargarEventos();
 
     contenedor.innerHTML = "";
+
+    if (eventos.length === 0) {
+      contenedor.innerHTML = "<p>No hay eventos todavía</p>";
+      return;
+    }
 
     for (let evento of eventos) {
       const card = await crearCard(evento);
