@@ -12,10 +12,6 @@ app.use(cors());
 // 🔐 SECRET
 const SECRET = "abc123456";
 
-// 🔐 LOGIN ADMIN (simple)
-const ADMIN_USER = "admin";
-const ADMIN_PASS = "1234";
-
 // 🟢 CONEXIÓN POSTGRES (RAILWAY)
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -32,21 +28,39 @@ app.get("/", (req, res) => {
 });
 
 // =======================
-// 🔐 LOGIN
+// 🔐 LOGIN (DESDE BD)
 // =======================
-app.post("/login", (req, res) => {
+app.post("/login", async (req, res) => {
   const { user, pass } = req.body;
 
-  if (user === ADMIN_USER && pass === ADMIN_PASS) {
-    const token = jwt.sign({ role: "admin" }, SECRET, { expiresIn: "2h" });
-    return res.json({ token });
-  }
+  try {
+    const result = await pool.query(
+      "SELECT * FROM users WHERE username = $1",
+      [user]
+    );
 
-  res.status(401).json({ error: "Credenciales incorrectas" });
+    const dbUser = result.rows[0];
+
+    if (!dbUser || dbUser.password !== pass) {
+      return res.status(401).json({ error: "Credenciales incorrectas" });
+    }
+
+    const token = jwt.sign(
+      { id: dbUser.id, role: dbUser.role },
+      SECRET,
+      { expiresIn: "2h" }
+    );
+
+    res.json({ token });
+
+  } catch (err) {
+    console.error("LOGIN ERROR:", err);
+    res.status(500).json({ error: "Error servidor" });
+  }
 });
 
 // =======================
-// 🔒 MIDDLEWARE AUTH
+// 🔒 MIDDLEWARE AUTH + ROLES
 // =======================
 function auth(req, res, next) {
   const token = req.headers.authorization;
@@ -54,8 +68,16 @@ function auth(req, res, next) {
   if (!token) return res.status(401).send("No autorizado");
 
   try {
-    jwt.verify(token, SECRET);
+    const decoded = jwt.verify(token, SECRET);
+
+    // solo admin o seller pueden crear eventos
+    if (decoded.role !== "admin" && decoded.role !== "seller") {
+      return res.status(403).send("Sin permisos");
+    }
+
+    req.user = decoded;
     next();
+
   } catch (err) {
     return res.status(401).send("Token inválido");
   }
@@ -105,7 +127,7 @@ app.get("/validate", (req, res) => {
 // 🎫 EVENTS (POSTGRES)
 // =======================
 
-// ➕ CREAR EVENTO (AHORA PROTEGIDO)
+// ➕ CREAR EVENTO (PROTEGIDO)
 app.post("/events", auth, async (req, res) => {
   try {
     const { name, date, price } = req.body;
