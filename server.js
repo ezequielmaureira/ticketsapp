@@ -114,6 +114,60 @@ app.post("/users", async (req, res) => {
   }
 });
 
+// =======================
+// 📋 LISTAR USUARIOS (SOLO ADMIN)
+// =======================
+app.get("/users", async (req, res) => {
+  try {
+    const token = req.headers.authorization;
+
+    if (!token) return res.status(401).send("No autorizado");
+
+    const decoded = jwt.verify(token, SECRET);
+
+    if (decoded.role !== "admin") {
+      return res.status(403).send("Sin permisos");
+    }
+
+    const result = await pool.query(
+      "SELECT id, username, role FROM users ORDER BY id DESC"
+    );
+
+    res.json(result.rows);
+
+  } catch (err) {
+    console.error("ERROR GET /users:", err);
+    res.status(500).json([]);
+  }
+});
+
+// =======================
+// ❌ ELIMINAR USUARIO (SOLO ADMIN)
+// =======================
+app.delete("/users/:id", async (req, res) => {
+  try {
+    const token = req.headers.authorization;
+
+    if (!token) return res.status(401).send("No autorizado");
+
+    const decoded = jwt.verify(token, SECRET);
+
+    if (decoded.role !== "admin") {
+      return res.status(403).send("Sin permisos");
+    }
+
+    const { id } = req.params;
+
+    await pool.query("DELETE FROM users WHERE id = $1", [id]);
+
+    res.json({ ok: true });
+
+  } catch (err) {
+    console.error("ERROR DELETE /users:", err);
+    res.status(500).json({ ok: false });
+  }
+});
+
 
 
 // =======================
